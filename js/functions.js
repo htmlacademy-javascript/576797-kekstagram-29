@@ -4,11 +4,10 @@
  * @param {number} allowLength -  максимальная длина имени
  * @returns {boolean} - true, если строка меньше или равна указанной длине, и false, если строка длиннее
  */
-const checkStrokeLength = (string, allowLength) => (string.length <= allowLength);
+const checkValidStringLength = (string, allowLength) => (string.length <= allowLength);
 
-window.console.log(checkStrokeLength('проверяемая строка', 20),' ожидаю:true');
-window.console.log(checkStrokeLength('проверяемая строка', 18),' ожидаю:true');
-window.console.log(checkStrokeLength('проверяемая строка', 10),' ожидаю:false');
+checkValidStringLength('проверяемая строка', 20);
+
 
 /**
  * Функция для проверки, является ли строка палиндромом.
@@ -21,35 +20,32 @@ function isPalindrome (string) {
   for (let i = currentString.length - 1; i > -1; i--) {
     rotateString += currentString[i];
   }
-  return (rotateString === currentString);
+  return rotateString === currentString;
 }
+isPalindrome('Лёша на полке клопа нашёл');
 
-window.console.log(isPalindrome('топот'),' ожидаю:true');
-window.console.log(isPalindrome('ДовОд'),' ожидаю:true');
-window.console.log(isPalindrome('Кекс'),' ожидаю:false');
-window.console.log(isPalindrome('Лёша на полке клопа нашёл'),' ожидаю:true');
 
 /**
  * Функция принимает строку, извлекает содержащиеся в ней цифры от 0 до 9 и возвращает их в виде целого положительного числа.
  * Если в строке нет ни одной цифры, функция должна вернуть NaN
  */
-function catchNumber(string) {
-  const currentString = string.toString().replaceAll(' ', '');
+function getNumberFromString(data) {
+  const currentString = data.toString().replaceAll(' ', '');
   let finallyString = '';
   for (const letter of currentString) {
-    if (!isNaN(letter)) {
+    if (!Number.isNaN(Number(letter))) {
       finallyString += letter;
     }
   }
-
   if (parseInt(finallyString, 10)) {
-    return Number(finallyString);
+    return finallyString;
   }
   return NaN;
 }
-
-window.console.log(catchNumber('2023 год'), ' ожидаю 2023');
-window.console.log(catchNumber('ECMAScript 2022'), ' ожидаю 2022');
-window.console.log(catchNumber('1 кефир, 0.5 батона'), ' ожидаю 105');
-window.console.log(catchNumber('агент 007'), ' ожидаю 7');
-window.console.log(catchNumber('а я томат'), ' ожидаю NaN');
+getNumberFromString('ECMAScript 2022');
+// window.console.log(getNumberFromString('2023 год'), 2023);
+// window.console.log(getNumberFromString('ECMAScript 2022'), 2022);
+// window.console.log(getNumberFromString('1 кефир, 0.5 батона'), 105);
+// window.console.log(getNumberFromString('агент 007'), 7);
+// window.console.log(getNumberFromString('а я томат'), NaN);
+// window.console.log(getNumberFromString(234), 234);
