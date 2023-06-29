@@ -53,7 +53,15 @@ const getRandomInteger = (min, max) => {
   return Math.floor(result);
 };
 
-const getRandomArrayElement = (elements) => elements[getRandomInteger(0, elements.length - 1)];
+const getRandomArrayElement = (elements) => {
+  if (elements.length === 0) {
+    return undefined;
+  } else if (elements.length === 1) {
+    return 1;
+  } else {
+    return elements[getRandomInteger(0, elements.length - 1)];
+  }
+};
 
 const generateRandomId = (min, max) => {
   const usedId = [];
@@ -87,14 +95,14 @@ const imageId = generateRandomId(1, 30);
 /**
  * @return {string} - одно или два случайных предложения из массива MESSAGES
  * */
-const getMessages = () => {
-  let quantityOfMessages = getRandomInteger(1, 2);
+const getMessage = () => {
+  const quantityOfMessages = getRandomInteger(1, 2);
   const messages = [];
-  while (quantityOfMessages > 0) {
+  messages.push(getRandomArrayElement(MESSAGES));
+  if (quantityOfMessages === 2) {
     messages.push(getRandomArrayElement(MESSAGES));
-    quantityOfMessages--;
   }
-  return messages.join();
+  return messages.join(' ');
 };
 
 /**
@@ -108,7 +116,7 @@ function createComment() {
   return ({
     id: photoId(),
     avatar: `img/avatar-${getRandomInteger(1, 6)}.svg.`,
-    message: getMessages(),
+    message: getMessage(),
     name: getRandomArrayElement(NAMES)
   });
 }
