@@ -81,8 +81,8 @@ const generateRandomId = (min, max) => {
   };
 };
 
-const photoId = generateRandomId(1, 25);
-const imageId = generateRandomId(1, 25);
+const photoId = generateRandomId(1, 30);
+const imageId = generateRandomId(1, 30);
 
 /**
  * @return {string} - одно или два случайных предложения из массива MESSAGES
@@ -104,27 +104,40 @@ const getMessages = () => {
  * message {string} - одно или два случайных предложения из массива MESSAGES;
  * name {string} - случайное имя из массива NAMES;
  */
-const createComment = () => ({
-  id: photoId(),
-  avatar: `img/avatar-${getRandomInteger(1, 6)}.svg.`,
-  message: getMessages(),
-  name: getRandomArrayElement(NAMES)
-});
-window.console.log(createComment());
+function createComment() {
+  return ({
+    id: photoId(),
+    avatar: `img/avatar-${getRandomInteger(1, 6)}.svg.`,
+    message: getMessages(),
+    name: getRandomArrayElement(NAMES)
+  });
+}
+
+const getComments = () => {
+  const comments = [];
+  let numberOfComments = getRandomInteger(0, 30);
+  while (numberOfComments > 0) {
+    comments.push(createComment());
+    numberOfComments--;
+  }
+  return comments;
+};
 
 /**
- * id - {number} id опубликованной фотографии (случайное число от 1 до 25, не должны повторяться)
- * url - {string}, адрес картинки (photos/{{i}}.jpg, {{i}} - случайное число от 1 до 25), не должны повторяться
- * description - {string}, описание фотографии DESCRIPTIONS[i]
- * likes - {number}, количество лайков, поставленных фотографии (случайное число от 15 до 200)
- * comments - массив объектов - список комментариев { createComment() }, оставленных другими пользователями к этой фотографии. Количество комментариев к каждой фотографии — случайное число от 0 до 30. Все комментарии генерируются случайным образом.'
- * TODO fix last step - comments
+ *  * @return Object
+ * id {number} - id опубликованной фотографии (не должны повторяться);
+ * url {string} - адрес картинки (не должны повторяться);
+ * description {string} - случайное описание фотографии из массива DESCRIPTIONS;
+ * likes {number} - количество лайков у фотографии (случайное число от 15 до 200);
+ * comments {array} - массив объектов, список комментариев createComment() (случайное число от 0 до 30)
  * */
 const createPhotoDescription = () => ({
   id: photoId(),
   url: `photos/${imageId()}.jpg`,
   description: getRandomArrayElement(DESCRIPTIONS),
   likes: getRandomInteger(15, 200),
-  comments: []
+  comments: getComments()
 });
-window.console.log(createPhotoDescription());
+
+// window.console.log(createPhotoDescription());
+createPhotoDescription();
