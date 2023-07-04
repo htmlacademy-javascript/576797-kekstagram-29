@@ -121,16 +121,6 @@ function createComment() {
   });
 }
 
-const getComments = () => {
-  const comments = [];
-  let numberOfComments = getRandomInteger(0, 30);
-  while (numberOfComments > 0) {
-    comments.push(createComment());
-    numberOfComments--;
-  }
-  return comments;
-};
-
 /**
  *  * @return Object
  * id {number} - id опубликованной фотографии (не должны повторяться);
@@ -144,7 +134,7 @@ const createPhotoDescription = () => ({
   url: `photos/${imageId()}.jpg`,
   description: getRandomArrayElement(DESCRIPTIONS),
   likes: getRandomInteger(15, 200),
-  comments: getComments()
+  comments: Array.from({length: getRandomInteger(0 ,30)}, createComment)
 });
 
 // window.console.log(createPhotoDescription());
