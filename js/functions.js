@@ -49,3 +49,30 @@ getNumberFromString('ECMAScript 2022');
 // window.console.log(getNumberFromString('агент 007'), 7);
 // window.console.log(getNumberFromString('а я томат'), NaN);
 // window.console.log(getNumberFromString(234), 234);
+
+
+/*
+  возвращает true, если встреча не выходит за рамки рабочего дня, и false, если выходит
+*/
+function isWorkTime(startOfWorkDay, endOfWorkDay, startOfWorkCall, workCallDuration) {
+  const splitStringToArray = (str) => str.split(':');
+  const startWork = splitStringToArray(startOfWorkDay);
+  const endWork = splitStringToArray(endOfWorkDay);
+  const startOfCall = splitStringToArray(startOfWorkCall);
+  const callDuration = workCallDuration;
+  //если звонок начинается раньше рабочего времени
+  if (Number(startOfCall[0]) < Number(startWork[0])) {
+    return false;
+  }
+  const remainingWorkingTime = () => {
+    const hoursLeft = Number(endWork[0]) - Number(startOfCall[0]);
+    const minutesLeft = Number(endWork[1]) - Number(startOfCall[1]);
+    return (hoursLeft * 60 + minutesLeft);
+  };
+  return Number(remainingWorkingTime()) >= Number(callDuration);
+}
+isWorkTime('08:00', '17:30', '14:00', 90); // true
+// isWorkTime('8:0', '10:0', '8:0', 120); // true
+// isWorkTime('08:00', '14:30', '14:00', 90); // false
+// isWorkTime('14:00', '17:30', '08:0', 90); // false
+// isWorkTime('8:00', '17:30', '08:00', 900); // false
