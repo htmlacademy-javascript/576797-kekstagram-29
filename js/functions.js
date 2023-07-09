@@ -51,25 +51,25 @@ getNumberFromString('ECMAScript 2022');
 // window.console.log(getNumberFromString(234), 234);
 
 
+const getTimeFromString = (str) => {
+  const [hours, minutes] = str.split(':').map(Number);
+  return {hours, minutes};
+};
 /*
   возвращает true, если встреча не выходит за рамки рабочего дня, и false, если выходит
 */
-function isWorkTime(startOfWorkDay, endOfWorkDay, startOfWorkCall, workCallDuration) {
-  const splitStringToArray = (str) => str.split(':');
-  const startWork = splitStringToArray(startOfWorkDay);
-  const endWork = splitStringToArray(endOfWorkDay);
-  const startOfCall = splitStringToArray(startOfWorkCall);
-  const callDuration = workCallDuration;
+function isWorkTime(startOfWorkDay, endOfWorkDay, startOfWorkCall, callDuration) {
+  const startWork = getTimeFromString(startOfWorkDay);
+  const endWork = getTimeFromString(endOfWorkDay);
+  const startOfCall = getTimeFromString(startOfWorkCall);
   //если звонок начинается раньше рабочего времени
-  if (Number(startOfCall[0]) < Number(startWork[0])) {
+  if (startOfCall.hours < startWork.hours) {
     return false;
   }
-  const remainingWorkingTime = () => {
-    const hoursLeft = Number(endWork[0]) - Number(startOfCall[0]);
-    const minutesLeft = Number(endWork[1]) - Number(startOfCall[1]);
-    return (hoursLeft * 60 + minutesLeft);
-  };
-  return Number(remainingWorkingTime()) >= Number(callDuration);
+  const hoursLeft = endWork.hours - startOfCall.hours;
+  const minutesLeft = endWork.minutes - startOfCall.minutes;
+  const remainingWorkingTime = hoursLeft * 60 + minutesLeft;
+  return remainingWorkingTime >= callDuration;
 }
 isWorkTime('08:00', '17:30', '14:00', 90); // true
 // isWorkTime('8:0', '10:0', '8:0', 120); // true
