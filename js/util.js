@@ -9,7 +9,7 @@ const getRandomArrayElement = (elements) => {
   if (elements.length === 0) {
     return undefined;
   } else if (elements.length === 1) {
-    return 1;
+    return elements[0];
   } else {
     return elements[getRandomInteger(0, elements.length - 1)];
   }

@@ -1,9 +1,5 @@
-import {getRandomInteger} from './util.js';
-import {getRandomArrayElement} from './util.js';
-
-import {NAMES} from './const.js';
-import {MESSAGES} from './const.js';
-import {DESCRIPTIONS} from './const.js';
+import {getRandomInteger, getRandomArrayElement} from './util.js';
+import {NAMES, MESSAGES, DESCRIPTIONS} from './const.js';
 
 const generateRandomId = (min, max) => {
   const usedId = [];
@@ -38,10 +34,9 @@ const imageId = generateRandomId(1, 30);
  * @return {string} - одно или два случайных предложения из массива MESSAGES
  * */
 const getMessage = () => {
-  const quantityOfMessages = getRandomInteger(1, 2);
   const messages = [];
   messages.push(getRandomArrayElement(MESSAGES));
-  if (quantityOfMessages === 2) {
+  if (getRandomInteger(0, 1) === 1) {
     messages.push(getRandomArrayElement(MESSAGES));
   }
   return messages.join(' ');
