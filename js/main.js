@@ -1,4 +1,4 @@
 import {createPhotoDescription} from './data.js';
+import {createPicture} from './picture.js';
 
-window.console.log(createPhotoDescription());
-// createPhotoDescription();
+createPicture(createPhotoDescription());
