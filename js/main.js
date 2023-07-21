@@ -1,4 +1,4 @@
-import {getPhotoData} from './data.js';
-import {addUserPhotoPosts} from './picture.js';
+import {photoList} from './data.js';
+import {renderPictures} from './picture.js';
 
-addUserPhotoPosts(getPhotoData);
+renderPictures(photoList);

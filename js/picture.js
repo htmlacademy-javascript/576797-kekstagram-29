@@ -1,7 +1,7 @@
 const template = document.querySelector('#picture').content.querySelector('.picture');
 const pictureBlock = document.querySelector('.pictures');
 
-const createPost = ({url, description, comments, likes }) => {
+const createPicture = ({url, description, comments, likes }) => {
   const pictureTemplate = template.cloneNode(true);
   pictureTemplate.querySelector('.picture__img').src = url || '';
   pictureTemplate.querySelector('.picture__img').alt = description || '';
@@ -11,15 +11,14 @@ const createPost = ({url, description, comments, likes }) => {
 };
 
 /**
- * @param picturesData {array} - array of objects
+ * @param pictures {array} - array of objects
  * */
-const addUserPhotoPosts = (picturesData) => {
-  const pictures = picturesData;
+const renderPictures = (pictures) => {
   const fragment = document.createDocumentFragment();
-  pictures.forEach((postData) => {
-    fragment.appendChild(createPost(postData));
+  pictures.forEach((picture) => {
+    fragment.appendChild(createPicture(picture));
   });
   pictureBlock.appendChild(fragment);
 };
 
-export {addUserPhotoPosts};
+export {renderPictures};

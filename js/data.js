@@ -66,7 +66,7 @@ function createComment() {
  * likes {number} - количество лайков у фотографии (случайное число от 15 до 200);
  * comments {array} - массив объектов, список комментариев createComment() (случайное число от 0 до 30)
  * */
-const createPhotoComponentData = () => ({
+const createPhoto = () => ({
   id: photoId(),
   url: `photos/${imageId()}.jpg`,
   description: getRandomArrayElement(DESCRIPTIONS),
@@ -74,6 +74,6 @@ const createPhotoComponentData = () => ({
   comments: Array.from({length: getRandomInteger(0 ,30)}, createComment)
 });
 
-const getPhotoData = Array.from({length: 25}, createPhotoComponentData);
+const photoList = Array.from({length: 25}, createPhoto);
 
-export {getPhotoData};
+export {photoList};
