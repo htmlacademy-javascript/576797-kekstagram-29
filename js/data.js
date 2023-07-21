@@ -28,7 +28,7 @@ const generateRandomId = (min, max) => {
 };
 
 const photoId = generateRandomId(1, 30);
-const imageId = generateRandomId(1, 30);
+const imageId = generateRandomId(1, 25);
 
 /**
  * @return {string} - одно или два случайных предложения из массива MESSAGES
@@ -66,7 +66,7 @@ function createComment() {
  * likes {number} - количество лайков у фотографии (случайное число от 15 до 200);
  * comments {array} - массив объектов, список комментариев createComment() (случайное число от 0 до 30)
  * */
-const createPhotoDescription = () => ({
+const createPhoto = () => ({
   id: photoId(),
   url: `photos/${imageId()}.jpg`,
   description: getRandomArrayElement(DESCRIPTIONS),
@@ -74,4 +74,6 @@ const createPhotoDescription = () => ({
   comments: Array.from({length: getRandomInteger(0 ,30)}, createComment)
 });
 
-export {createPhotoDescription};
+const photoList = Array.from({length: 25}, createPhoto);
+
+export {photoList};

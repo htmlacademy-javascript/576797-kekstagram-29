@@ -1,4 +1,4 @@
-import {createPhotoDescription} from './data.js';
+import {photoList} from './data.js';
+import {renderPictures} from './picture.js';
 
-window.console.log(createPhotoDescription());
-// createPhotoDescription();
+renderPictures(photoList);
