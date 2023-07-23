@@ -1,6 +1,34 @@
-import {isEscapeKey, isEnterKey} from './util.js';
-const miniatures = document.querySelector('.pictures');
+import {isEscapeKey} from './util.js';
+const commentTemplate = document.querySelector('#modal-comment').content.querySelector('.social__comment');
+
 const modal = document.querySelector('.big-picture');
+
+const modalImage = modal.querySelector('.big-picture__img img');
+const modalLikes = modal.querySelector('.likes-count');
+const modalComments = modal.querySelector('.comments-count');
+const modalDescription = modal.querySelector('.social__caption');
+
+const modalList = modal.querySelector('.social__comments');
+//hidden comment blocks
+const commentCount = document.querySelector('.social__comment-count');
+const commentLoader = document.querySelector('.comments-loader');
+
+const createComment = ({url, likes, description,comments}) => {
+  modalImage.src = url;
+  modalLikes.textContent = likes;
+  modalComments.textContent = comments.length;
+  modalDescription.textContent = description;
+  const fragment = document.createDocumentFragment();
+  comments.forEach(({avatar, message, name}) => {
+    const newComment = commentTemplate.cloneNode(true);
+    newComment.querySelector('.social__picture').src = avatar;
+    newComment.querySelector('.social__picture').alt = name;
+    newComment.querySelector('.social__text').textContent = message;
+    fragment.appendChild(newComment);
+  });
+  modalList.innerHTML = '';
+  modalList.appendChild(fragment);
+};
 
 const onDocumentKeydown = (evt) => {
   if (isEscapeKey(evt)) {
@@ -9,23 +37,22 @@ const onDocumentKeydown = (evt) => {
   }
 };
 
-function showModal() {
+function showModal(picture) {
   modal.classList.remove('hidden');
   document.body.classList.add('modal-open');
+  commentCount.classList.add('hidden');
+  commentLoader.classList.add('hidden');
   document.addEventListener('keydown', onDocumentKeydown);
+  createComment(picture);
 }
 
 function closeModal() {
   modal.classList.add('hidden');
   document.body.classList.remove('modal-open');
+  commentCount.classList.remove('hidden');
+  commentLoader.classList.remove('hidden');
   document.removeEventListener('keydown', onDocumentKeydown);
 }
-
-miniatures.addEventListener('click', (evt) => {
-  if (evt.target.closest('.picture')) {
-    showModal();
-  }
-});
 
 modal.addEventListener('click', (evt) => {
   if (evt.target.matches('.big-picture__cancel')) {
@@ -33,10 +60,5 @@ modal.addEventListener('click', (evt) => {
   }
 });
 
-document.addEventListener('keydown', (evt) => {
-  if (isEnterKey(evt)) {
-    showModal();
-  }
-});
-
+export {showModal};
 

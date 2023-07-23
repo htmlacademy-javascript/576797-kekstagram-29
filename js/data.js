@@ -27,7 +27,8 @@ const generateRandomId = (min, max) => {
   };
 };
 
-const photoId = generateRandomId(1, 30);
+const commentId = generateRandomId(0, 900);
+const photoId = generateRandomId(1, 25);
 const imageId = generateRandomId(1, 25);
 
 /**
@@ -51,8 +52,8 @@ const getMessage = () => {
  */
 function createComment() {
   return ({
-    id: photoId(),
-    avatar: `img/avatar-${getRandomInteger(1, 6)}.svg.`,
+    id: commentId(),
+    avatar: `img/avatar-${getRandomInteger(1, 6)}.svg`,
     message: getMessage(),
     name: getRandomArrayElement(NAMES)
   });
