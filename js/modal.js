@@ -2,11 +2,12 @@ import {isEscapeKey} from './util.js';
 const commentTemplate = document.querySelector('#modal-comment').content.querySelector('.social__comment');
 
 const modal = document.querySelector('.big-picture');
-
-const modalImage = modal.querySelector('.big-picture__img img');
-const modalLikes = modal.querySelector('.likes-count');
-const modalComments = modal.querySelector('.comments-count');
-const modalDescription = modal.querySelector('.social__caption');
+const modalContent = {
+  Image: modal.querySelector('.big-picture__img img'),
+  Likes: modal.querySelector('.likes-count'),
+  Comments: modal.querySelector('.comments-count'),
+  Description: modal.querySelector('.social__caption'),
+};
 
 const modalList = modal.querySelector('.social__comments');
 //hidden comment blocks
@@ -14,10 +15,10 @@ const commentCount = document.querySelector('.social__comment-count');
 const commentLoader = document.querySelector('.comments-loader');
 
 const createComment = ({url, likes, description,comments}) => {
-  modalImage.src = url;
-  modalLikes.textContent = likes;
-  modalComments.textContent = comments.length;
-  modalDescription.textContent = description;
+  modalContent.Image.src = url;
+  modalContent.Likes.textContent = likes;
+  modalContent.Comments.textContent = comments.length;
+  modalContent.Description.textContent = description;
   const fragment = document.createDocumentFragment();
   comments.forEach(({avatar, message, name}) => {
     const newComment = commentTemplate.cloneNode(true);
