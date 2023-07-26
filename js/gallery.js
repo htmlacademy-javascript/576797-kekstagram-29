@@ -8,7 +8,7 @@ function renderGallery(photoList) {
   pictures.addEventListener('click', (evt) => {
     const picturesId = evt.target.closest('[data-picture-id]');
     if (!picturesId) {
-      return '';
+      return;
     }
     const picture = photoList.find((item) => item.id === Number(picturesId.dataset.pictureId));
     showModal(picture);
