@@ -27,7 +27,7 @@ class Card {
     this.shownCommentsCount = 0;
   }
 
-  clickAddMore() {
+  addMoreComments () {
     this.shownCommentsCount += COMMENT_STEP;
 
     if (this.shownCommentsCount > this.picture.comments.length) {
@@ -35,10 +35,10 @@ class Card {
       refreshButton.classList.add('hidden');
     }
 
-    this.refreshComments();
+    this.renderComments();
   }
 
-  refreshComments() {
+  renderComments() {
     // удаляем все комментарии
     modal.list.innerHTML = '';
     if (this.picture.comments.length === 0) {
@@ -76,7 +76,7 @@ class Card {
       }
     }
 
-    this.refreshComments();
+    this.renderComments();
   }
 }
 
@@ -113,7 +113,7 @@ function showModal (picture) {
 
   picturesCache[picture.id] = pictureModal;
 
-  refreshButton.addEventListener('click', () => pictureModal.clickAddMore());
+  refreshButton.addEventListener('click', () => pictureModal.addMoreComments());
 }
 
 function closeModal() {
