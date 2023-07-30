@@ -1,5 +1,5 @@
 import {photoList} from './data.js';
 import {renderGallery} from './gallery.js';
-import './editors.js';
+import './editor.js';
 
 renderGallery(photoList);
