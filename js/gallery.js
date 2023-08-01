@@ -1,5 +1,5 @@
 import {renderPictures} from './picture.js';
-import {showModal} from './modal.js';
+import {showModal} from './big-picture-modal.js';
 
 const pictures = document.querySelector('.pictures');
 

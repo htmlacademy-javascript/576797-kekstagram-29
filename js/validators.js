@@ -1,7 +1,7 @@
 import {MAX_HASHTAG_COUNT, VALID_SYMBOLS} from './const.js';
 
 // приводим значение поля к массиву и убираем пустые строки
-const hashTags = (value) => value.trim().split(' ').filter((el) => el.length !== 0);
+const hashTags = (value) => value.trim().split(' ').filter(Boolean);
 
 /*
 * хэш-тег начинается с символа #;
@@ -9,19 +9,19 @@ const hashTags = (value) => value.trim().split(' ').filter((el) => el.length !==
 * хеш-тег не может состоять только из одной решётки;
 * максимальная длина одного хэш-тега 20 символов, включая решётку;
 * */
-const isHashtagValid = (value) => hashTags(value).every((el) => VALID_SYMBOLS.test(el));
+const isHashtagsValid = (value) => hashTags(value).every((el) => VALID_SYMBOLS.test(el));
 
 //один и тот же хэш-тег не может быть использован дважды
-const isRepeatedHashTags = (value) => {
+const isHashTagUnique = (value) => {
   // хэш-теги нечувствительны к регистру
-  const lowerCaseHashTags = hashTags(value).map((el) => el.toLowerCase());
+  const lowerCaseHashTags = hashTags(value.toLowerCase());
   // создаем новый объект без повторяющихся элементов и приводим его к массиву
-  const newHashTags = Array.from(new Set(lowerCaseHashTags));
-  return newHashTags.length === hashTags(value).length;
+  const newHashTags = new Set(lowerCaseHashTags);
+  return newHashTags.size === hashTags(value).length;
 };
 
 // можно добавлять не больше пяти хэш-тегов
 const isHashTagLimitExceeded = (value) => hashTags(value).length <= MAX_HASHTAG_COUNT;
 
-export {isHashtagValid, isRepeatedHashTags, isHashTagLimitExceeded};
+export {isHashtagsValid, isHashTagUnique, isHashTagLimitExceeded};
 

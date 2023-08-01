@@ -1,9 +1,10 @@
 import '/vendor/pristine/pristine.min.js';
 import '/vendor/nouislider/nouislider.js';
-import { isEscapeKey } from './util.js';
-import { isHashtagValid, isRepeatedHashTags, isHashTagLimitExceeded } from './validators.js';
-import { SCALE_STEP, FILTERS } from './const.js';
-
+import {isHashtagsValid, isHashTagUnique, isHashTagLimitExceeded} from './validators.js';
+import {SCALE_STEP, FILTERS} from './const.js';
+import {sendData} from './api.js';
+import {messageModal} from './message-modal.js';
+import { modals } from './modals.js';
 
 class Editor {
 
@@ -12,12 +13,13 @@ class Editor {
     this.backDrop = form.querySelector('.img-upload__overlay');
     this.closeButton = form.querySelector('.img-upload__cancel');
     this.uploadInput = form.querySelector('.img-upload__input');
+    this.submitButton = form.querySelector('.img-upload__submit');
 
     //находим поле для редактирования масштаба загруженной картинки
     this.scaleBox = form.querySelector('.img-upload__scale');
     this.scaleInput = form.querySelector('.scale__control--value');
-    this.scaleIncreaseButton = form.querySelector('.scale__control--smaller');
-    this.scaleDecreaseButton = form.querySelector('.scale__control--bigger');
+    this.scaleDecreaseButton = form.querySelector('.scale__control--smaller');
+    this.scaleIncreaseButton = form.querySelector('.scale__control--bigger');
     this.uploadedImage = form.querySelector('.img-upload__preview img');
 
     //слайдер + эффекты
@@ -31,11 +33,8 @@ class Editor {
 
     this.pristine = new Pristine(form, {
       classTo: 'img-upload__field-wrapper',
-      // errorClass: 'form__item--invalid',
-      // successClass: 'form__item--valid',
       errorTextParent: 'img-upload__field-wrapper',
       errorTextTag: 'div',
-      // errorTextClass: 'img-upload__field-wrapper_error'
     });
   }
 
@@ -43,6 +42,7 @@ class Editor {
     this.uploadInput.addEventListener('change', (evt) => {
       //следим за открытием модального окна
       this.toggle(true);
+      // пока не используем
       this.showImage(evt);
     });
 
@@ -51,16 +51,13 @@ class Editor {
     // проверяем валидность хештега
     this.pristine.addValidator(
       this.hashTagFiled,
-      isHashtagValid,
-      'хэш-тег должен начинаться с символа #, ' +
-      'хеш-тег не может состоять только из одной решётки, ' +
-      'строка после решётки должна состоять из букв и чисел, ' +
-      'максимальная длина одного хэш-тега 20 символов, включая решётку');
+      isHashtagsValid,
+      'хэш-тег должен начинаться с символа #, хеш-тег не может состоять только из одной решётки, строка после решётки должна состоять из букв и чисел, максимальная длина одного хэш-тега 20 символов, включая решётку');
 
     // проверяем дублирование хештегов
     this.pristine.addValidator(
       this.hashTagFiled,
-      isRepeatedHashTags,
+      isHashTagUnique,
       'один и тот же хэш-тег не может быть использован дважды');
 
     // проверяем максимальное количество хештегов
@@ -76,95 +73,61 @@ class Editor {
     this.form.addEventListener('submit', (evt) => this.onSubmit(evt));
   }
 
-  onDocumentKeydown (evt) {
-    if (isEscapeKey(evt)) {
-      evt.preventDefault();
-      // если hashtag или textarea поле в фокусе не момент события
-      if (evt.target.closest('.img-upload__field-wrapper')) {
-        return;
-      }
-      this.closeBackDrop();
+  toggle (state) {
+    if (state) {
+      modals.add(this);
+      this.showModal();
+    } else {
+      this.closeModal();
     }
   }
 
-  showBackdrop () {
+  showModal () {
     this.backDrop.classList.remove('hidden');
     document.body.classList.add('modal-open');
+    // создаем slider
     this.createSlider();
+    // добавляем события на scale & slider
+    this.scaleBox.addEventListener('click', (evt) => this.onResize(evt));
+    this.effectsList.addEventListener('change', (evt) => this.onChangeEffect(evt));
   }
 
-  closeBackDrop() {
+  closeModal() {
     this.backDrop.classList.add('hidden');
     document.body.classList.remove('modal-open');
-    /*
-    * при закрытии формы дополнительно необходимо сбрасывать значение поля выбора файла .img-upload__input.
-    * Событие change не сработает, если загрузить ту же фотографию (окно с формой не отобразится).
-    * Значение других полей формы также нужно сбрасывать.
-    * */
+    // сбрасываем значение полей
     this.uploadInput.value = '';
     this.uploadedImage.removeAttribute('style');
     this.sliderElement.noUiSlider.destroy();
     this.hashTagFiled.value = '';
     this.textareaField.value = '';
+    // удаляем события на scale & slider
+    this.scaleBox.removeEventListener('click', (evt) => this.onResize(evt));
+    this.effectsList.removeEventListener('change', (evt) => this.onChangeEffect(evt));
   }
 
-  onSubmit(evt) {
-    evt.preventDefault();
-    const valid = this.pristine.validate();
-    window.console.log('!!!', valid);
+  // modals.js
+  hide () {
+    this.closeModal();
+    modals.remove(this);
   }
 
-  toggle (state) {
-    if (state) {
-      // показываем модальное окно с загруженной картинкой
-      this.showBackdrop();
-      document.addEventListener('keydown', (evt) => this.onDocumentKeydown(evt));
-      // следим за масштабом загруженной картинки
-      this.scaleBox.addEventListener('click', (evt) => this.onResize(evt));
-      this.effectsList.addEventListener('change', (evt) => this.onChangeEffect(evt));
-    } else {
-      this.closeBackDrop();
-      document.removeEventListener('keydown', (evt) => this.onDocumentKeydown(evt));
-      this.scaleBox.removeEventListener('click', (evt) => this.onResize(evt));
-      this.effectsList.removeEventListener('change', (evt) => this.onResize(evt));
-    }
-  }
-
-  /*
-  * Масштаб:
-  * #1
-  * При нажатии на кнопки .scale__control--smaller и .scale__control--bigger должно изменяться значение поля
-  * .scale__control--value;
-  * #2
-  * Значение должно изменяться с шагом в 25. Например, если значение поля установлено в 50%, после нажатия на «+»,
-  * значение должно стать равным 75%.
-  * Максимальное значение — 100%, минимальное — 25%. Значение по умолчанию — 100%;
-  * #3
-  * При изменении значения поля .scale__control--value изображению внутри .img-upload__preview должен добавляться
-  * соответствующий стиль CSS, который с помощью трансформации scale задаёт масштаб. Например, если в поле стоит
-  * значение 75%, то в стиле изображения должно быть написано transform: scale(0.75).
-  */
+  // масштабирование загруженной картинки
   onResize (evt) {
-    const currentInputValue = Number(this.scaleInput.value.replace('%', ''));
+    // оставляем только цифры
+    const currentInputValue = Number(this.scaleInput.value.replace(/[^\d]/g,''));
     let newInputValue;
-    if (evt.target === this.scaleIncreaseButton) {
-      if (currentInputValue === 25) {
-        return;
-      }
 
-      newInputValue = currentInputValue - SCALE_STEP;
-      this.scaleInput.value = `${newInputValue}%`;
-      this.uploadedImage.style.transform = `scale(${newInputValue / 100})`;
-    }
     if (evt.target === this.scaleDecreaseButton) {
-      if (currentInputValue === 100) {
-        return;
-      }
-
-      newInputValue = currentInputValue + SCALE_STEP;
-      this.scaleInput.value = `${newInputValue}%`;
-      this.uploadedImage.style.transform = `scale(${newInputValue / 100})`;
+      newInputValue = Math.max(25, currentInputValue - SCALE_STEP);
     }
+
+    if (evt.target === this.scaleIncreaseButton) {
+      newInputValue = Math.min(100, currentInputValue + SCALE_STEP);
+    }
+
+    this.scaleInput.value = `${newInputValue}%`;
+    this.uploadedImage.style.transform = `scale(${newInputValue / 100})`;
   }
 
   createSlider () {
@@ -190,18 +153,11 @@ class Editor {
         },
       },
     });
+
+    this.effectsList.addEventListener('change', (evt) => this.onChangeEffect(evt));
   }
 
-  /*
-  * Наложение эффекта на изображение:
-  * эффект умолчанию - «Оригинал» - слайдер и его контейнер (элемент .img-upload__effect-level) скрываются
-  * на изображение может накладываться только один эффект
-  * Интенсивность эффекта регулируется перемещением ползунка
-  * уровень эффекта записывается в поле .effect-level__value
-  * изображению добавляется соответсвующий фильтр с текущим уровнем эффекта слайдера (FILTERS хранит нужные настройки)
-  * При переключении эффектов, уровень насыщенности сбрасывается до начального значения (100%): слайдер, CSS-стиль
-  * изображения и значение поля должны обновляться.
-  */
+  // Наложение эффекта на изображение
   onChangeEffect (evt) {
     const inputValue = evt.target.closest('.effects__radio').value;
     if (inputValue === 'none') {
@@ -216,21 +172,46 @@ class Editor {
     // refresh slider options
     this.sliderElement.noUiSlider.updateOptions({
       range: {
-        min: min,
-        max: max
+        min,
+        max
       },
-      start: start,
-      step: step
+      start,
+      step
     });
 
     this.sliderContainer.style.display = 'block';
 
     this.sliderElement.noUiSlider.on('update', () => {
       // записываем значение в поле
-      this.effectDataField.value = `${this.sliderElement.noUiSlider.get()}`;
+      // TODO убрал `` при тестировании проверь ошибки
+      this.effectDataField.value = this.sliderElement.noUiSlider.get();
+
       // добавляем стилизацию загруженной картинке
-      this.uploadedImage.style.filter = `${filter}(${this.effectDataField.value}${unit})`;
+      const getFilterValue = () => `${filter}(${this.effectDataField.value}${unit})`;
+      this.uploadedImage.style.filter = getFilterValue();
     });
+  }
+
+  onSubmit(evt) {
+    evt.preventDefault();
+    const isValid = this.pristine.validate();
+    if (isValid) {
+      this.blockSubmitButton();
+
+      sendData('submit', new FormData(evt.target))
+        .then(() => this.closeModal())
+        .then(() => messageModal.show('success'))
+        .catch(() => messageModal.show('error'))
+        .finally(() => this.unblockSubmitButton());
+    }
+  }
+
+  blockSubmitButton() {
+    this.submitButton.disabled = true;
+  }
+
+  unblockSubmitButton() {
+    this.submitButton.disabled = false;
   }
 
   /*
@@ -242,6 +223,4 @@ class Editor {
   }
 }
 
-const editor = new Editor(document.querySelector('.img-upload__form'));
-
-editor.init();
+export const editor = new Editor(document.querySelector('.img-upload__form'));
