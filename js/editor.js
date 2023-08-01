@@ -1,6 +1,6 @@
 import '/vendor/pristine/pristine.min.js';
 import '/vendor/nouislider/nouislider.js';
-import {isHashtagValid, isRepeatedHashTags, isHashTagLimitExceeded} from './validators.js';
+import {isHashtagsValid, isHashTagUnique, isHashTagLimitExceeded} from './validators.js';
 import {SCALE_STEP, FILTERS} from './const.js';
 import {sendData} from './api.js';
 import {messageModal} from './message-modal.js';
@@ -18,8 +18,8 @@ class Editor {
     //находим поле для редактирования масштаба загруженной картинки
     this.scaleBox = form.querySelector('.img-upload__scale');
     this.scaleInput = form.querySelector('.scale__control--value');
-    this.scaleIncreaseButton = form.querySelector('.scale__control--smaller');
-    this.scaleDecreaseButton = form.querySelector('.scale__control--bigger');
+    this.scaleDecreaseButton = form.querySelector('.scale__control--smaller');
+    this.scaleIncreaseButton = form.querySelector('.scale__control--bigger');
     this.uploadedImage = form.querySelector('.img-upload__preview img');
 
     //слайдер + эффекты
@@ -51,13 +51,13 @@ class Editor {
     // проверяем валидность хештега
     this.pristine.addValidator(
       this.hashTagFiled,
-      isHashtagValid,
+      isHashtagsValid,
       'хэш-тег должен начинаться с символа #, хеш-тег не может состоять только из одной решётки, строка после решётки должна состоять из букв и чисел, максимальная длина одного хэш-тега 20 символов, включая решётку');
 
     // проверяем дублирование хештегов
     this.pristine.addValidator(
       this.hashTagFiled,
-      isRepeatedHashTags,
+      isHashTagUnique,
       'один и тот же хэш-тег не может быть использован дважды');
 
     // проверяем максимальное количество хештегов
@@ -114,27 +114,20 @@ class Editor {
 
   // масштабирование загруженной картинки
   onResize (evt) {
-    // TODO упрости
-    const currentInputValue = Number(this.scaleInput.value.replace('%', ''));
+    // оставляем только цифры
+    const currentInputValue = Number(this.scaleInput.value.replace(/[^\d]/g,''));
     let newInputValue;
-    if (evt.target === this.scaleIncreaseButton) {
-      if (currentInputValue === 25) {
-        return;
-      }
 
-      newInputValue = currentInputValue - SCALE_STEP;
-      this.scaleInput.value = `${newInputValue}%`;
-      this.uploadedImage.style.transform = `scale(${newInputValue / 100})`;
-    }
     if (evt.target === this.scaleDecreaseButton) {
-      if (currentInputValue === 100) {
-        return;
-      }
-
-      newInputValue = currentInputValue + SCALE_STEP;
-      this.scaleInput.value = `${newInputValue}%`;
-      this.uploadedImage.style.transform = `scale(${newInputValue / 100})`;
+      newInputValue = Math.max(25, currentInputValue - SCALE_STEP);
     }
+
+    if (evt.target === this.scaleIncreaseButton) {
+      newInputValue = Math.min(100, currentInputValue + SCALE_STEP);
+    }
+
+    this.scaleInput.value = `${newInputValue}%`;
+    this.uploadedImage.style.transform = `scale(${newInputValue / 100})`;
   }
 
   createSlider () {
@@ -179,27 +172,29 @@ class Editor {
     // refresh slider options
     this.sliderElement.noUiSlider.updateOptions({
       range: {
-        min: min,
-        max: max
+        min,
+        max
       },
-      start: start,
-      step: step
+      start,
+      step
     });
 
     this.sliderContainer.style.display = 'block';
 
     this.sliderElement.noUiSlider.on('update', () => {
       // записываем значение в поле
-      this.effectDataField.value = `${this.sliderElement.noUiSlider.get()}`;
+      // TODO убрал `` при тестировании проверь ошибки
+      this.effectDataField.value = this.sliderElement.noUiSlider.get();
+
       // добавляем стилизацию загруженной картинке
-      this.uploadedImage.style.filter = `${filter}(${this.effectDataField.value}${unit})`;
+      const getFilterValue = () => `${filter}(${this.effectDataField.value}${unit})`;
+      this.uploadedImage.style.filter = getFilterValue();
     });
   }
 
   onSubmit(evt) {
     evt.preventDefault();
     const isValid = this.pristine.validate();
-    window.console.log('!!!', isValid); // TODO remove
     if (isValid) {
       this.blockSubmitButton();
 
