@@ -1,4 +1,3 @@
-import {isEscapeKey} from './util.js';
 import {modals} from './modals.js';
 
 class MessageModal {
