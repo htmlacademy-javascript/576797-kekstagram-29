@@ -1,7 +1,7 @@
 import {MAX_HASHTAG_COUNT, VALID_SYMBOLS} from './const.js';
 
 // приводим значение поля к массиву и убираем пустые строки
-const hashTags = (value) => value.trim().split(' ').filter((el) => el.length !== 0);
+const hashTags = (value) => value.trim().split(' ').filter(Boolean);
 
 /*
 * хэш-тег начинается с символа #;

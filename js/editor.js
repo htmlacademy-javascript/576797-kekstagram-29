@@ -1,11 +1,10 @@
 import '/vendor/pristine/pristine.min.js';
 import '/vendor/nouislider/nouislider.js';
-import {isEscapeKey} from './util.js';
 import {isHashtagValid, isRepeatedHashTags, isHashTagLimitExceeded} from './validators.js';
 import {SCALE_STEP, FILTERS} from './const.js';
 import {sendData} from './api.js';
 import {messageModal} from './message-modal.js';
-
+import { modals } from './modals.js';
 
 class Editor {
 
@@ -43,6 +42,7 @@ class Editor {
     this.uploadInput.addEventListener('change', (evt) => {
       //следим за открытием модального окна
       this.toggle(true);
+      // пока не используем
       this.showImage(evt);
     });
 
@@ -52,10 +52,7 @@ class Editor {
     this.pristine.addValidator(
       this.hashTagFiled,
       isHashtagValid,
-      'хэш-тег должен начинаться с символа #, ' +
-      'хеш-тег не может состоять только из одной решётки, ' +
-      'строка после решётки должна состоять из букв и чисел, ' +
-      'максимальная длина одного хэш-тега 20 символов, включая решётку');
+      'хэш-тег должен начинаться с символа #, хеш-тег не может состоять только из одной решётки, строка после решётки должна состоять из букв и чисел, максимальная длина одного хэш-тега 20 символов, включая решётку');
 
     // проверяем дублирование хештегов
     this.pristine.addValidator(
@@ -76,75 +73,48 @@ class Editor {
     this.form.addEventListener('submit', (evt) => this.onSubmit(evt));
   }
 
-  onDocumentKeydown (evt) {
-    if (isEscapeKey(evt)) {
-      evt.preventDefault();
-      // если hashtag или textarea поле в фокусе не момент события
-      if (evt.target.closest('.img-upload__field-wrapper')) {
-        return;
-      }
-      this.closeBackDrop();
+  toggle (state) {
+    if (state) {
+      modals.add(this);
+      this.showModal();
+    } else {
+      this.closeModal();
     }
   }
 
-  showBackdrop () {
+  showModal () {
     this.backDrop.classList.remove('hidden');
     document.body.classList.add('modal-open');
+    // создаем slider
     this.createSlider();
+    // добавляем события на scale & slider
+    this.scaleBox.addEventListener('click', (evt) => this.onResize(evt));
+    this.effectsList.addEventListener('change', (evt) => this.onChangeEffect(evt));
   }
 
-  closeBackDrop() {
+  closeModal() {
     this.backDrop.classList.add('hidden');
     document.body.classList.remove('modal-open');
-    // при закрытии формы дополнительно необходимо сбрасывать значение полей
+    // сбрасываем значение полей
     this.uploadInput.value = '';
     this.uploadedImage.removeAttribute('style');
     this.sliderElement.noUiSlider.destroy();
     this.hashTagFiled.value = '';
     this.textareaField.value = '';
+    // удаляем события на scale & slider
+    this.scaleBox.removeEventListener('click', (evt) => this.onResize(evt));
+    this.effectsList.removeEventListener('change', (evt) => this.onChangeEffect(evt));
   }
 
-  onSubmit(evt) {
-    evt.preventDefault();
-    const isValid = this.pristine.validate();
-    window.console.log('!!!', isValid); // TODO remove
-    if (isValid) {
-      this.blockSubmitButton();
-
-      sendData('submit', new FormData(evt.target))
-        .then(() => this.closeBackDrop())
-        .then(() => messageModal.show('success'))
-        .catch(() => messageModal.show('error'))
-        .finally(() => this.unblockSubmitButton());
-    }
-  }
-
-  blockSubmitButton() {
-    this.submitButton.disabled = true;
-  }
-
-  unblockSubmitButton() {
-    this.submitButton.disabled = false;
-  }
-
-  toggle (state) {
-    if (state) {
-      // показываем модальное окно с загруженной картинкой
-      this.showBackdrop();
-      document.addEventListener('keydown', (evt) => this.onDocumentKeydown(evt));
-      // следим за масштабом загруженной картинки
-      this.scaleBox.addEventListener('click', (evt) => this.onResize(evt));
-      this.effectsList.addEventListener('change', (evt) => this.onChangeEffect(evt));
-    } else {
-      this.closeBackDrop();
-      document.removeEventListener('keydown', (evt) => this.onDocumentKeydown(evt));
-      this.scaleBox.removeEventListener('click', (evt) => this.onResize(evt));
-      this.effectsList.removeEventListener('change', (evt) => this.onResize(evt));
-    }
+  // modals.js
+  hide () {
+    this.closeModal();
+    modals.remove(this);
   }
 
   // масштабирование загруженной картинки
   onResize (evt) {
+    // TODO упрости
     const currentInputValue = Number(this.scaleInput.value.replace('%', ''));
     let newInputValue;
     if (evt.target === this.scaleIncreaseButton) {
@@ -190,6 +160,8 @@ class Editor {
         },
       },
     });
+
+    this.effectsList.addEventListener('change', (evt) => this.onChangeEffect(evt));
   }
 
   // Наложение эффекта на изображение
@@ -224,6 +196,29 @@ class Editor {
     });
   }
 
+  onSubmit(evt) {
+    evt.preventDefault();
+    const isValid = this.pristine.validate();
+    window.console.log('!!!', isValid); // TODO remove
+    if (isValid) {
+      this.blockSubmitButton();
+
+      sendData('submit', new FormData(evt.target))
+        .then(() => this.closeModal())
+        .then(() => messageModal.show('success'))
+        .catch(() => messageModal.show('error'))
+        .finally(() => this.unblockSubmitButton());
+    }
+  }
+
+  blockSubmitButton() {
+    this.submitButton.disabled = true;
+  }
+
+  unblockSubmitButton() {
+    this.submitButton.disabled = false;
+  }
+
   /*
   * Важно. Подстановка выбранного изображения в форму — это отдельная домашняя работа.
   * В данном задании этот пункт реализовывать не нужно.
@@ -234,5 +229,3 @@ class Editor {
 }
 
 export const editor = new Editor(document.querySelector('.img-upload__form'));
-
-editor.init();

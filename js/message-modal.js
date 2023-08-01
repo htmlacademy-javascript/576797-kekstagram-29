@@ -1,48 +1,48 @@
 import {isEscapeKey} from './util.js';
+import {modals} from './modals.js';
 
 class MessageModal {
   constructor () {
+    this.isShowed = false;
     this.success = document.querySelector('#success').content.querySelector('.success');
     this.error = document.querySelector('#error').content.querySelector('.error');
+    this.onClose = this.onClose.bind(this);
   }
 
   /**
    * @param {'success' | 'error'} type
    */
   show (type) {
+    this.isShowed = true;
+
     if (type === 'success') {
       this.modal = this.success.cloneNode(true);
     } else if (type === 'error') {
       this.modal = this.error.cloneNode(true);
     }
 
-    document.addEventListener('keydown', (evt) => this.onDocumentKeydown(evt), true);
-    document.addEventListener('click', (evt) => this.onClose(evt));
     document.body.appendChild(this.modal);
+    modals.add(this);
+
+    this.modal.addEventListener('click', this.onClose);
   }
 
   hide () {
-    window.console.log('!!', this.modal);
+    if (this.isShowed === false) {
+      return;
+    }
+
+    this.isShowed = false;
+    this.modal.removeEventListener('click', this.onClose);
     this.modal.remove();
-    document.removeEventListener('click', (evt) => this.onClose(evt));
-    document.removeEventListener('keydown', (evt) => this.onDocumentKeydown(evt));
+    modals.remove(this);
   }
 
   onClose (evt) {
-    evt.preventDefault();
     if (evt.target.closest('.success__button, .error__button')) {
       this.hide();
     }
     if (!evt.target.closest('.success__inner, .error__inner')) {
-      this.hide();
-    }
-  }
-
-  onDocumentKeydown (evt) {
-    if (isEscapeKey(evt)) {
-      evt.preventDefault();
-      window.console.log('#', evt.target.matches('.error'));
-      // TODO срабатывает ивент с editor
       this.hide();
     }
   }

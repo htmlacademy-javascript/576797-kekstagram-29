@@ -2,6 +2,7 @@ import {getData} from './api.js';
 import {showAlert} from './util.js';
 import {renderGallery} from './gallery.js';
 import './editor.js';
+import {editor} from './editor.js';
 
 getData('fetch')
   .then((pictures) => {
@@ -12,3 +13,5 @@ getData('fetch')
       showAlert(err.message);
     }
   );
+
+editor.init();
