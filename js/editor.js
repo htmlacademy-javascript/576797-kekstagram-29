@@ -1,8 +1,10 @@
 import '/vendor/pristine/pristine.min.js';
 import '/vendor/nouislider/nouislider.js';
-import { isEscapeKey } from './util.js';
-import { isHashtagValid, isRepeatedHashTags, isHashTagLimitExceeded } from './validators.js';
-import { SCALE_STEP, FILTERS } from './const.js';
+import {isEscapeKey} from './util.js';
+import {isHashtagValid, isRepeatedHashTags, isHashTagLimitExceeded} from './validators.js';
+import {SCALE_STEP, FILTERS} from './const.js';
+import {sendData} from './api.js';
+import {messageModal} from './message-modal.js';
 
 
 class Editor {
@@ -12,6 +14,7 @@ class Editor {
     this.backDrop = form.querySelector('.img-upload__overlay');
     this.closeButton = form.querySelector('.img-upload__cancel');
     this.uploadInput = form.querySelector('.img-upload__input');
+    this.submitButton = form.querySelector('.img-upload__submit');
 
     //находим поле для редактирования масштаба загруженной картинки
     this.scaleBox = form.querySelector('.img-upload__scale');
@@ -31,11 +34,8 @@ class Editor {
 
     this.pristine = new Pristine(form, {
       classTo: 'img-upload__field-wrapper',
-      // errorClass: 'form__item--invalid',
-      // successClass: 'form__item--valid',
       errorTextParent: 'img-upload__field-wrapper',
       errorTextTag: 'div',
-      // errorTextClass: 'img-upload__field-wrapper_error'
     });
   }
 
@@ -96,11 +96,7 @@ class Editor {
   closeBackDrop() {
     this.backDrop.classList.add('hidden');
     document.body.classList.remove('modal-open');
-    /*
-    * при закрытии формы дополнительно необходимо сбрасывать значение поля выбора файла .img-upload__input.
-    * Событие change не сработает, если загрузить ту же фотографию (окно с формой не отобразится).
-    * Значение других полей формы также нужно сбрасывать.
-    * */
+    // при закрытии формы дополнительно необходимо сбрасывать значение полей
     this.uploadInput.value = '';
     this.uploadedImage.removeAttribute('style');
     this.sliderElement.noUiSlider.destroy();
@@ -110,8 +106,25 @@ class Editor {
 
   onSubmit(evt) {
     evt.preventDefault();
-    const valid = this.pristine.validate();
-    window.console.log('!!!', valid);
+    const isValid = this.pristine.validate();
+    window.console.log('!!!', isValid); // TODO remove
+    if (isValid) {
+      this.blockSubmitButton();
+
+      sendData('submit', new FormData(evt.target))
+        .then(() => this.closeBackDrop())
+        .then(() => messageModal.show('success'))
+        .catch(() => messageModal.show('error'))
+        .finally(() => this.unblockSubmitButton());
+    }
+  }
+
+  blockSubmitButton() {
+    this.submitButton.disabled = true;
+  }
+
+  unblockSubmitButton() {
+    this.submitButton.disabled = false;
   }
 
   toggle (state) {
@@ -130,20 +143,7 @@ class Editor {
     }
   }
 
-  /*
-  * Масштаб:
-  * #1
-  * При нажатии на кнопки .scale__control--smaller и .scale__control--bigger должно изменяться значение поля
-  * .scale__control--value;
-  * #2
-  * Значение должно изменяться с шагом в 25. Например, если значение поля установлено в 50%, после нажатия на «+»,
-  * значение должно стать равным 75%.
-  * Максимальное значение — 100%, минимальное — 25%. Значение по умолчанию — 100%;
-  * #3
-  * При изменении значения поля .scale__control--value изображению внутри .img-upload__preview должен добавляться
-  * соответствующий стиль CSS, который с помощью трансформации scale задаёт масштаб. Например, если в поле стоит
-  * значение 75%, то в стиле изображения должно быть написано transform: scale(0.75).
-  */
+  // масштабирование загруженной картинки
   onResize (evt) {
     const currentInputValue = Number(this.scaleInput.value.replace('%', ''));
     let newInputValue;
@@ -192,16 +192,7 @@ class Editor {
     });
   }
 
-  /*
-  * Наложение эффекта на изображение:
-  * эффект умолчанию - «Оригинал» - слайдер и его контейнер (элемент .img-upload__effect-level) скрываются
-  * на изображение может накладываться только один эффект
-  * Интенсивность эффекта регулируется перемещением ползунка
-  * уровень эффекта записывается в поле .effect-level__value
-  * изображению добавляется соответсвующий фильтр с текущим уровнем эффекта слайдера (FILTERS хранит нужные настройки)
-  * При переключении эффектов, уровень насыщенности сбрасывается до начального значения (100%): слайдер, CSS-стиль
-  * изображения и значение поля должны обновляться.
-  */
+  // Наложение эффекта на изображение
   onChangeEffect (evt) {
     const inputValue = evt.target.closest('.effects__radio').value;
     if (inputValue === 'none') {
@@ -242,6 +233,6 @@ class Editor {
   }
 }
 
-const editor = new Editor(document.querySelector('.img-upload__form'));
+export const editor = new Editor(document.querySelector('.img-upload__form'));
 
 editor.init();

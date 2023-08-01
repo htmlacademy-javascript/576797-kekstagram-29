@@ -1,5 +1,14 @@
-import {photoList} from './data.js';
+import {getData} from './api.js';
+import {showAlert} from './util.js';
 import {renderGallery} from './gallery.js';
 import './editor.js';
 
-renderGallery(photoList);
+getData('fetch')
+  .then((pictures) => {
+    renderGallery(pictures);
+  })
+  .catch(
+    (err) => {
+      showAlert(err.message);
+    }
+  );
