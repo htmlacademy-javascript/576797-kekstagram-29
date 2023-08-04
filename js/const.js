@@ -110,6 +110,8 @@ const IMAGE_FILTER = {
   'filter-discussed': 'top',
 };
 
+const FILE_TYPES = ['jpg', 'jpeg', 'png'];
+
 export {
   NAMES,
   MESSAGES,
@@ -119,5 +121,6 @@ export {
   SCALE_STEP,
   FILTERS,
   IMAGE_FILTER,
+  FILE_TYPES,
 };
 

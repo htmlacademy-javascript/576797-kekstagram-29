@@ -1,7 +1,7 @@
 import '/vendor/pristine/pristine.min.js';
 import '/vendor/nouislider/nouislider.js';
 import {isHashtagsValid, isHashTagUnique, isHashTagLimitExceeded} from './validators.js';
-import {SCALE_STEP, FILTERS} from './const.js';
+import {SCALE_STEP, FILTERS, FILE_TYPES} from './const.js';
 import {sendData} from './api.js';
 import {messageModal} from './message-modal.js';
 import { modals } from './modals.js';
@@ -39,11 +39,11 @@ class Editor {
   }
 
   init () {
-    this.uploadInput.addEventListener('change', (evt) => {
+    this.uploadInput.addEventListener('change', () => {
       //следим за открытием модального окна
       this.toggle(true);
       // пока не используем
-      this.showImage(evt);
+      this.showImage();
     });
 
     this.closeButton.addEventListener('click', () => this.toggle(false));
@@ -183,7 +183,6 @@ class Editor {
 
     this.sliderElement.noUiSlider.on('update', () => {
       // записываем значение в поле
-      // TODO убрал `` при тестировании проверь ошибки
       this.effectDataField.value = this.sliderElement.noUiSlider.get();
 
       // добавляем стилизацию загруженной картинке
@@ -215,11 +214,18 @@ class Editor {
   }
 
   /*
-  * Важно. Подстановка выбранного изображения в форму — это отдельная домашняя работа.
-  * В данном задании этот пункт реализовывать не нужно.
+  * Подставляет выбранное изображения в форму
   * */
-  showImage (image) {
-    this.image = image;
+  showImage () {
+    this.image = this.uploadInput.files[0];
+    const fileName = this.image.name.toLowerCase();
+
+    // вернет true если будет хотя бы одно совпадение
+    const matches = FILE_TYPES.some((it) => fileName.endsWith(it));
+
+    if (matches) {
+      this.uploadedImage.src = URL.createObjectURL(this.image);
+    }
   }
 }
 
