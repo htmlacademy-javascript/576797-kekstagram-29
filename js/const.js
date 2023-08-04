@@ -104,6 +104,12 @@ const FILTERS = {
   }
 };
 
+const IMAGE_FILTER = {
+  'filter-default': 'default',
+  'filter-random': 'random',
+  'filter-discussed': 'top',
+};
+
 export {
   NAMES,
   MESSAGES,
@@ -111,6 +117,7 @@ export {
   MAX_HASHTAG_COUNT,
   VALID_SYMBOLS,
   SCALE_STEP,
-  FILTERS
+  FILTERS,
+  IMAGE_FILTER,
 };
 
