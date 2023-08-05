@@ -28,6 +28,7 @@ class Editor {
     this.effectDataField = form.querySelector('.effect-level__value');
     this.sliderElement = form.querySelector('.effect-level__slider');
     this.effectsList = form.querySelector('.effects__list');
+    this.defaultListItem = form.querySelector('#effect-none');
 
     this.hashTagFiled = form.querySelector('.text__hashtags');
     this.textareaField = form.querySelector('.text__description');
@@ -96,10 +97,13 @@ class Editor {
   closeModal() {
     this.backDrop.classList.add('hidden');
     document.body.classList.remove('modal-open');
+    this.pristine.reset();
     // сбрасываем значение полей
     this.uploadInput.value = '';
     this.uploadedImage.removeAttribute('style');
-    this.sliderElement.noUiSlider.destroy();
+    this.scaleInput.value = '100%';
+    // this.sliderElement.noUiSlider.destroy();
+    this.defaultListItem.checked = true;
     this.hashTagFiled.value = '';
     this.textareaField.value = '';
     // удаляем события на scale & slider
