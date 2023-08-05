@@ -21,7 +21,7 @@ const COMMENT_STEP = 5;
 * комментарии отображаются с шагом в 5 штук
 * */
 
-class Card {
+class Post {
   constructor(picture) {
     this.picture = picture;
     this.shownCommentsCount = 0;
@@ -80,52 +80,55 @@ class Card {
   }
 }
 
-const picturesCache = {};
-
-const onDocumentKeydown = (evt) => {
-  if (isEscapeKey(evt)) {
-    evt.preventDefault();
-    closeModal();
+class PostView {
+  constructor() {
+    this.picturesCache = {};
+    modalBigPicture.addEventListener('click', (evt) => {
+      if (evt.target.matches('.big-picture__cancel')) {
+        this.closeModal();
+      }
+    });
+    this.onDocumentKeydown = this.onDocumentKeydown.bind(this);
   }
-};
 
-const showBackDrop = () => {
-  modalBigPicture.classList.remove('hidden');
-  document.body.classList.add('modal-open');
-  commentCountField.classList.add('hidden');
-  refreshButton.classList.add('hidden');
-  document.addEventListener('keydown', onDocumentKeydown);
-};
+  closeModal() {
+    modalBigPicture.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+    document.removeEventListener('keydown', this.onDocumentKeydown);
+  }
 
-function showModal (picture) {
-  // object || undefined
-  let pictureModal = picturesCache[picture.id];
+  onDocumentKeydown (evt) {
+    if (isEscapeKey(evt)) {
+      evt.preventDefault();
+      this.closeModal();
+    }
+  }
 
-  showBackDrop();
+  showBackDrop () {
+    modalBigPicture.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+    commentCountField.classList.add('hidden');
+    refreshButton.classList.add('hidden');
+    document.addEventListener('keydown', this.onDocumentKeydown);
+  }
 
-  if (pictureModal) {
+  showModal (picture) {
+    // object || undefined
+    let pictureModal = this.picturesCache[picture.id];
+
+    this.showBackDrop();
+
+    if (pictureModal) {
+      pictureModal.show();
+      return;
+    }
+
+    pictureModal = new Post(picture);
     pictureModal.show();
-    return;
+
+    this.picturesCache[picture.id] = pictureModal;
+
+    refreshButton.addEventListener('click', () => pictureModal.addMoreComments());
   }
-
-  pictureModal = new Card(picture);
-  pictureModal.show();
-
-  picturesCache[picture.id] = pictureModal;
-
-  refreshButton.addEventListener('click', () => pictureModal.addMoreComments());
 }
-
-function closeModal() {
-  modalBigPicture.classList.add('hidden');
-  document.body.classList.remove('modal-open');
-  document.removeEventListener('keydown', onDocumentKeydown);
-}
-
-modalBigPicture.addEventListener('click', (evt) => {
-  if (evt.target.matches('.big-picture__cancel')) {
-    closeModal();
-  }
-});
-
-export {showModal};
+export default PostView;

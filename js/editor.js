@@ -3,12 +3,12 @@ import '/vendor/nouislider/nouislider.js';
 import {isHashtagsValid, isHashTagUnique, isHashTagLimitExceeded} from './validators.js';
 import {SCALE_STEP, FILTERS, FILE_TYPES} from './const.js';
 import {sendData} from './api.js';
-import {messageModal} from './message-modal.js';
-import { modals } from './modals.js';
 
-class Editor {
+export default class Editor {
 
-  constructor (form) {
+  constructor (form, modals, messageModal) {
+    this.modals = modals;
+    this.messageModal = messageModal;
     this.form = form;
     this.backDrop = form.querySelector('.img-upload__overlay');
     this.closeButton = form.querySelector('.img-upload__cancel');
@@ -21,12 +21,14 @@ class Editor {
     this.scaleDecreaseButton = form.querySelector('.scale__control--smaller');
     this.scaleIncreaseButton = form.querySelector('.scale__control--bigger');
     this.uploadedImage = form.querySelector('.img-upload__preview img');
+    this.prewiewImages = form.querySelectorAll('.effects__preview');
 
     //слайдер + эффекты
     this.sliderContainer = form.querySelector('.img-upload__effect-level');
     this.effectDataField = form.querySelector('.effect-level__value');
     this.sliderElement = form.querySelector('.effect-level__slider');
     this.effectsList = form.querySelector('.effects__list');
+    this.defaultListItem = form.querySelector('#effect-none');
 
     this.hashTagFiled = form.querySelector('.text__hashtags');
     this.textareaField = form.querySelector('.text__description');
@@ -36,13 +38,16 @@ class Editor {
       errorTextParent: 'img-upload__field-wrapper',
       errorTextTag: 'div',
     });
+
+    this.onResize = this.onResize.bind(this);
+    this.onChangeEffect = this.onChangeEffect.bind(this);
   }
 
   init () {
     this.uploadInput.addEventListener('change', () => {
       //следим за открытием модального окна
       this.toggle(true);
-      // пока не используем
+      // показываем загруженную картинку
       this.showImage();
     });
 
@@ -75,7 +80,7 @@ class Editor {
 
   toggle (state) {
     if (state) {
-      modals.add(this);
+      this.modals.add(this);
       this.showModal();
     } else {
       this.closeModal();
@@ -88,28 +93,33 @@ class Editor {
     // создаем slider
     this.createSlider();
     // добавляем события на scale & slider
-    this.scaleBox.addEventListener('click', (evt) => this.onResize(evt));
-    this.effectsList.addEventListener('change', (evt) => this.onChangeEffect(evt));
+    this.scaleBox.addEventListener('click', this.onResize);
+    this.effectsList.addEventListener('change', this.onChangeEffect);
   }
 
   closeModal() {
     this.backDrop.classList.add('hidden');
     document.body.classList.remove('modal-open');
+    this.pristine.reset();
     // сбрасываем значение полей
     this.uploadInput.value = '';
     this.uploadedImage.removeAttribute('style');
-    this.sliderElement.noUiSlider.destroy();
+    this.scaleInput.value = '100%';
+    if (this.sliderElement.noUiSlider) {
+      this.sliderElement.noUiSlider.destroy();
+    }
+    this.defaultListItem.checked = true;
     this.hashTagFiled.value = '';
     this.textareaField.value = '';
     // удаляем события на scale & slider
-    this.scaleBox.removeEventListener('click', (evt) => this.onResize(evt));
-    this.effectsList.removeEventListener('change', (evt) => this.onChangeEffect(evt));
+    this.scaleBox.removeEventListener('click', this.onResize);
+    this.effectsList.removeEventListener('change', this.onChangeEffect);
   }
 
   // modals.js
   hide () {
     this.closeModal();
-    modals.remove(this);
+    this.modals.remove(this);
   }
 
   // масштабирование загруженной картинки
@@ -144,9 +154,9 @@ class Editor {
         to: function (sliderValue) {
           // число целочисленное?
           if (Number.isInteger(sliderValue)) {
-            return sliderValue;
+            return sliderValue.toFixed(2);
           }
-          return sliderValue.toFixed(1);
+          return sliderValue.toFixed(2);
         },
         from: function (sliderValue) {
           return parseFloat(sliderValue);
@@ -160,10 +170,10 @@ class Editor {
   // Наложение эффекта на изображение
   onChangeEffect (evt) {
     const inputValue = evt.target.closest('.effects__radio').value;
+    this.effectDataField.value = '100%';
     if (inputValue === 'none') {
       this.sliderContainer.style.display = 'none';
       this.uploadedImage.style.filter = 'none';
-      this.effectDataField.value = '100%';
       return;
     }
 
@@ -186,8 +196,8 @@ class Editor {
       this.effectDataField.value = this.sliderElement.noUiSlider.get();
 
       // добавляем стилизацию загруженной картинке
-      const getFilterValue = () => `${filter}(${this.effectDataField.value}${unit})`;
-      this.uploadedImage.style.filter = getFilterValue();
+      const filterValue = `${filter}(${this.effectDataField.value}${unit})`;
+      this.uploadedImage.style.filter = filterValue;
     });
   }
 
@@ -199,8 +209,8 @@ class Editor {
 
       sendData('submit', new FormData(evt.target))
         .then(() => this.closeModal())
-        .then(() => messageModal.show('success'))
-        .catch(() => messageModal.show('error'))
+        .then(() => this.messageModal.show('success'))
+        .catch(() => this.messageModal.show('error'))
         .finally(() => this.unblockSubmitButton());
     }
   }
@@ -224,9 +234,12 @@ class Editor {
     const matches = FILE_TYPES.some((it) => fileName.endsWith(it));
 
     if (matches) {
-      this.uploadedImage.src = URL.createObjectURL(this.image);
+      const imageUrl = URL.createObjectURL(this.image);
+      this.uploadedImage.src = imageUrl;
+      // добавляет адрес картинки в превью эффектов
+      Array.from(this.prewiewImages).forEach((el) => {
+        el.style.backgroundImage = `url(${ imageUrl })`;
+      });
     }
   }
 }
-
-export const editor = new Editor(document.querySelector('.img-upload__form'));
