@@ -165,10 +165,10 @@ class Editor {
   // Наложение эффекта на изображение
   onChangeEffect (evt) {
     const inputValue = evt.target.closest('.effects__radio').value;
+    this.effectDataField.value = '100%';
     if (inputValue === 'none') {
       this.sliderContainer.style.display = 'none';
       this.uploadedImage.style.filter = 'none';
-      this.effectDataField.value = '100%';
       return;
     }
 
