@@ -21,6 +21,7 @@ class Editor {
     this.scaleDecreaseButton = form.querySelector('.scale__control--smaller');
     this.scaleIncreaseButton = form.querySelector('.scale__control--bigger');
     this.uploadedImage = form.querySelector('.img-upload__preview img');
+    this.prewiewImages = form.querySelectorAll('.effects__preview');
 
     //слайдер + эффекты
     this.sliderContainer = form.querySelector('.img-upload__effect-level');
@@ -186,8 +187,8 @@ class Editor {
       this.effectDataField.value = this.sliderElement.noUiSlider.get();
 
       // добавляем стилизацию загруженной картинке
-      const getFilterValue = () => `${filter}(${this.effectDataField.value}${unit})`;
-      this.uploadedImage.style.filter = getFilterValue();
+      const filterValue = `${filter}(${this.effectDataField.value}${unit})`;
+      this.uploadedImage.style.filter = filterValue;
     });
   }
 
@@ -224,7 +225,12 @@ class Editor {
     const matches = FILE_TYPES.some((it) => fileName.endsWith(it));
 
     if (matches) {
-      this.uploadedImage.src = URL.createObjectURL(this.image);
+      const imageUrl = URL.createObjectURL(this.image);
+      this.uploadedImage.src = imageUrl;
+      // добавляет адрес картинки в превью эффектов
+      Array.from(this.prewiewImages).forEach((el) => {
+        el.style.backgroundImage = `url(${ imageUrl })`;
+      });
     }
   }
 }
