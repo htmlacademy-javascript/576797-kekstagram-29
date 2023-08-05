@@ -102,7 +102,7 @@ class Editor {
     this.uploadInput.value = '';
     this.uploadedImage.removeAttribute('style');
     this.scaleInput.value = '100%';
-    // this.sliderElement.noUiSlider.destroy();
+    this.sliderElement.noUiSlider.destroy();
     this.defaultListItem.checked = true;
     this.hashTagFiled.value = '';
     this.textareaField.value = '';
