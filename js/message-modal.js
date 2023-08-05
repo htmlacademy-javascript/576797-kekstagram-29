@@ -1,7 +1,6 @@
-import {modals} from './modals.js';
-
-class MessageModal {
-  constructor () {
+export default class MessageModal {
+  constructor (modals) {
+    this.modals = modals;
     this.isShowed = false;
     this.success = document.querySelector('#success').content.querySelector('.success');
     this.error = document.querySelector('#error').content.querySelector('.error');
@@ -21,7 +20,7 @@ class MessageModal {
     }
 
     document.body.appendChild(this.modal);
-    modals.add(this);
+    this.modals.add(this);
 
     this.modal.addEventListener('click', this.onClose);
   }
@@ -34,7 +33,7 @@ class MessageModal {
     this.isShowed = false;
     this.modal.removeEventListener('click', this.onClose);
     this.modal.remove();
-    modals.remove(this);
+    this.modals.remove(this);
   }
 
   onClose (evt) {
@@ -46,7 +45,4 @@ class MessageModal {
     }
   }
 }
-
-export const messageModal = new MessageModal();
-
 

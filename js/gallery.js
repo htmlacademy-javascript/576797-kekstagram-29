@@ -1,31 +1,58 @@
-import {renderPictures} from './picture.js';
-import {showModal} from './big-picture-modal.js';
 import {sortPhotoList} from './sort.js';
 
 const pictures = document.querySelector('.pictures');
+const template = document.querySelector('#picture').content.querySelector('.picture');
+const pictureBlock = document.querySelector('.pictures');
 
-function renderGallery(photoList, sortMethod = '') {
-  const pictureItems = document.querySelectorAll('.picture');
-  // при перерисовке картинок удалям старые если есть
-  if (pictureItems.length !== 0) {
-    pictureItems.forEach((el) => el.remove());
+export default class Gallery {
+  constructor(photoList, postView) {
+    this.photoList = photoList;
+    this.originalphotoList = photoList;
+    this.postView = postView;
+    pictures.addEventListener('click', (evt) => {
+      const picturesId = evt.target.closest('[data-picture-id]');
+      if (!picturesId) {
+        return;
+      }
+      const picture = this.photoList.find((item) => item.id === Number(picturesId.dataset.pictureId));
+      this.postView.showModal(picture);
+    });
+    this.render = this.render.bind(this);
   }
 
-  const newPhotoList = photoList.slice();
-  if (!sortMethod || sortMethod === 'default') {
-    renderPictures(newPhotoList);
-  } else {
-    renderPictures(sortPhotoList(newPhotoList, sortMethod));
+  createPicture ({id, url, description, comments, likes}) {
+    const pictureTemplate = template.cloneNode(true);
+    pictureTemplate.dataset.pictureId = id || '';
+    pictureTemplate.querySelector('.picture__img').src = url || '';
+    pictureTemplate.querySelector('.picture__img').alt = description || '';
+    pictureTemplate.querySelector('.picture__comments').textContent = comments.length || '';
+    pictureTemplate.querySelector('.picture__likes').textContent = likes || '';
+    return pictureTemplate;
   }
 
-  pictures.addEventListener('click', (evt) => {
-    const picturesId = evt.target.closest('[data-picture-id]');
-    if (!picturesId) {
-      return;
+  /**
+   * @param pictures {array} - array of objects
+   * */
+  renderPictures (photoList) {
+    const fragment = document.createDocumentFragment();
+    photoList.forEach((picture) => {
+      fragment.appendChild(this.createPicture(picture));
+    });
+    pictureBlock.appendChild(fragment);
+  }
+
+  render(sortMethod = '') {
+    const pictureItems = document.querySelectorAll('.picture');
+    // при перерисовке картинок удалям старые если есть
+    if (pictureItems.length !== 0) {
+      pictureItems.forEach((el) => el.remove());
     }
-    const picture = newPhotoList.find((item) => item.id === Number(picturesId.dataset.pictureId));
-    showModal(picture);
-  });
-}
 
-export {renderGallery};
+    const newPhotoList = this.photoList.slice();
+    if (!sortMethod || sortMethod === 'default') {
+      this.renderPictures(newPhotoList);
+    } else {
+      this.renderPictures(sortPhotoList(newPhotoList, sortMethod));
+    }
+  }
+}

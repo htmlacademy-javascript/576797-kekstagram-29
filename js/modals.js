@@ -1,8 +1,9 @@
-class Modals {
+import {isEscapeKey} from './util.js';
+
+export default class Modals {
   showed = [];
 
   add(modal) {
-    window.console.log(modal);
     this.showed.push(modal);
   }
 
@@ -10,29 +11,28 @@ class Modals {
     this.showed = this.showed.filter((item) => item !== modal); // TODO работает только пока модалки синглтоны
   }
 
-  onClose(evt) {
+  onKeyDown(evt) {
     if (this.showed.length === 0) {
       return;
     }
 
-    // document.activeElement.tagName //caps 'BODY' проверяй на input textarea
-    if (evt.target.closest('.img-upload__field-wrapper')) {
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
       return;
     }
 
-    const modal = this.showed.pop();
+    if (isEscapeKey(evt)) {
+      const modal = this.showed.pop();
 
-    if (!modal) {
-      return;
+      if (!modal) {
+        return;
+      }
+
+      modal.hide();
     }
-
-    modal.hide();
   }
 
   init() {
-    document.addEventListener('keydown', (evt) => this.onClose(evt), true);
+    document.addEventListener('keydown', (evt) => this.onKeyDown(evt), true);
   }
 }
 
-export const modals = new Modals();
-modals.init();

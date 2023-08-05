@@ -3,12 +3,12 @@ import '/vendor/nouislider/nouislider.js';
 import {isHashtagsValid, isHashTagUnique, isHashTagLimitExceeded} from './validators.js';
 import {SCALE_STEP, FILTERS, FILE_TYPES} from './const.js';
 import {sendData} from './api.js';
-import {messageModal} from './message-modal.js';
-import { modals } from './modals.js';
 
-class Editor {
+export default class Editor {
 
-  constructor (form) {
+  constructor (form, modals, messageModal) {
+    this.modals = modals;
+    this.messageModal = messageModal;
     this.form = form;
     this.backDrop = form.querySelector('.img-upload__overlay');
     this.closeButton = form.querySelector('.img-upload__cancel');
@@ -38,13 +38,16 @@ class Editor {
       errorTextParent: 'img-upload__field-wrapper',
       errorTextTag: 'div',
     });
+
+    this.onResize = this.onResize.bind(this);
+    this.onChangeEffect = this.onChangeEffect.bind(this);
   }
 
   init () {
     this.uploadInput.addEventListener('change', () => {
       //следим за открытием модального окна
       this.toggle(true);
-      // пока не используем
+      // показываем загруженную картинку
       this.showImage();
     });
 
@@ -77,7 +80,7 @@ class Editor {
 
   toggle (state) {
     if (state) {
-      modals.add(this);
+      this.modals.add(this);
       this.showModal();
     } else {
       this.closeModal();
@@ -90,8 +93,8 @@ class Editor {
     // создаем slider
     this.createSlider();
     // добавляем события на scale & slider
-    this.scaleBox.addEventListener('click', (evt) => this.onResize(evt));
-    this.effectsList.addEventListener('change', (evt) => this.onChangeEffect(evt));
+    this.scaleBox.addEventListener('click', this.onResize);
+    this.effectsList.addEventListener('change', this.onChangeEffect);
   }
 
   closeModal() {
@@ -102,19 +105,21 @@ class Editor {
     this.uploadInput.value = '';
     this.uploadedImage.removeAttribute('style');
     this.scaleInput.value = '100%';
-    this.sliderElement.noUiSlider.destroy();
+    if (this.sliderElement.noUiSlider) {
+      this.sliderElement.noUiSlider.destroy();
+    }
     this.defaultListItem.checked = true;
     this.hashTagFiled.value = '';
     this.textareaField.value = '';
     // удаляем события на scale & slider
-    this.scaleBox.removeEventListener('click', (evt) => this.onResize(evt));
-    this.effectsList.removeEventListener('change', (evt) => this.onChangeEffect(evt));
+    this.scaleBox.removeEventListener('click', this.onResize);
+    this.effectsList.removeEventListener('change', this.onChangeEffect);
   }
 
   // modals.js
   hide () {
     this.closeModal();
-    modals.remove(this);
+    this.modals.remove(this);
   }
 
   // масштабирование загруженной картинки
@@ -149,9 +154,9 @@ class Editor {
         to: function (sliderValue) {
           // число целочисленное?
           if (Number.isInteger(sliderValue)) {
-            return sliderValue;
+            return sliderValue.toFixed(2);
           }
-          return sliderValue.toFixed(1);
+          return sliderValue.toFixed(2);
         },
         from: function (sliderValue) {
           return parseFloat(sliderValue);
@@ -204,8 +209,8 @@ class Editor {
 
       sendData('submit', new FormData(evt.target))
         .then(() => this.closeModal())
-        .then(() => messageModal.show('success'))
-        .catch(() => messageModal.show('error'))
+        .then(() => this.messageModal.show('success'))
+        .catch(() => this.messageModal.show('error'))
         .finally(() => this.unblockSubmitButton());
     }
   }
@@ -238,5 +243,3 @@ class Editor {
     }
   }
 }
-
-export const editor = new Editor(document.querySelector('.img-upload__form'));
